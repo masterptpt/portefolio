@@ -1,14 +1,12 @@
 const cloudinary = require('cloudinary').v2;
-const formidable = require('formidable');
 
-// Configurar Cloudinary
 cloudinary.config({
-  cloud_name: 'dkgxqphsb', // Substitua pelo seu cloud name
+  cloud_name: 'dkgxqphsb',
   api_key: '747828568319522',
   api_secret: 'ZquucvZt5griGrUIyIjLD1urpUM'
 });
 
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -17,24 +15,17 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const form = new formidable.IncomingForm();
-    const { files } = await new Promise((resolve, reject) => {
-      form.parse(event, (err, fields, files) => {
-        if (err) reject(err);
-        else resolve({ fields, files });
-      });
-    });
+    const payload = JSON.parse(event.body || '{}');
+    const dataUrl = payload.photo;
 
-    const file = files.photo;
-    if (!file) {
+    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: 'Nenhuma imagem enviada' })
       };
     }
 
-    // Upload para Cloudinary
-    const result = await cloudinary.uploader.upload(file.filepath, {
+    const result = await cloudinary.uploader.upload(dataUrl, {
       folder: 'portfolio-memories',
       public_id: `memoria-${Date.now()}`,
       resource_type: 'image'

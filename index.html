@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portefolio</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%232c1e14'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-family='Georgia,serif' font-size='38' fill='%23c5a059'%3EP%3C/text%3E%3C/svg%3E">
     <style>
         :root {
             --paper: #fdfaf0;
@@ -284,12 +285,18 @@ let photos = [];
             document.getElementById('loading').style.display = 'block';
             addBtn.disabled = true;
 
-            const formData = new FormData();
-            formData.append('photo', file);
-
+            const reader = new FileReader();
+            reader.onerror = () => {
+                showToast('Erro ao ler imagem');
+                document.getElementById('loading').style.display = 'none';
+                addBtn.disabled = true;
+                loading = false;
+            };
+            reader.onload = () => {
             fetch('/.netlify/functions/upload', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ photo: reader.result })
             })
             .then(response => {
                 if (!response.ok) throw new Error('Erro no upload');
@@ -314,6 +321,8 @@ let photos = [];
                 addBtn.disabled = true;
                 loading = false;
             });
+            };
+            reader.readAsDataURL(file);
         }
 
 
